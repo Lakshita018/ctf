@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Treasure Hunt</title>
+    <style>
+        body { text-align: center; font-family: Arial, sans-serif; }
+        #gameCanvas { border: 2px solid black; background: lightgray; }
+        #flagImage { display: none; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h2>Find the Hidden Flag!</h2>
+    <canvas id="gameCanvas" width="400" height="400"></canvas>
+    <img id="flagImage" src="img.jpg" alt="CTF Flag" width="200">
+    
+    <script>
+        const canvas = document.getElementById("gameCanvas");
+        const ctx = canvas.getContext("2d");
+        const flagImage = document.getElementById("flagImage");
+        
+        let player = { x: 20, y: 20, size: 20 };
+        let flag = { x: 360, y: 360, size: 20 };
+        let obstacles = [
+            { x: 100, y: 100, width: 100, height: 20 },
+            { x: 200, y: 250, width: 20, height: 100 },
+            { x: 50, y: 300, width: 100, height: 20 }
+        ];
+        let enemy = { x: 150, y: 150, size: 20, direction: 1 };
+        
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw obstacles
+            ctx.fillStyle = "black";
+            obstacles.forEach(obstacle => {
+                ctx.fillRect(obstacle.x, obstacle.y, obstacle.width, obstacle.height);
+            });
+            
+            // Draw player
+            ctx.fillStyle = "blue";
+            ctx.fillRect(player.x, player.y, player.size, player.size);
+            
+            // Draw enemy
+            ctx.fillStyle = "green";
+            ctx.fillRect(enemy.x, enemy.y, enemy.size, enemy.size);
+            
+            // Draw flag (goal)
+            ctx.fillStyle = "red";
+            ctx.fillRect(flag.x, flag.y, flag.size, flag.size);
+        }
+        
+        function checkWin() {
+            if (player.x === flag.x && player.y === flag.y) {
+                flagImage.style.display = "block";
+                alert("You found the flag!");
+            }
+        }
+        
+        function checkCollision(newX, newY) {
+            return obstacles.some(obstacle =>
+                newX < obstacle.x + obstacle.width &&
+                newX + player.size > obstacle.x &&
+                newY < obstacle.y + obstacle.height &&
+                newY + player.size > obstacle.y
+            );
+        }
+        
+        window.addEventListener("keydown", (e) => {
+            const step = 20;
+            let newX = player.x;
+            let newY = player.y;
+            
+            if (e.key === "ArrowUp" && player.y > 0) newY -= step;
+            if (e.key === "ArrowDown" && player.y < canvas.height - player.size) newY += step;
+            if (e.key === "ArrowLeft" && player.x > 0) newX -= step;
+            if (e.key === "ArrowRight" && player.x < canvas.width - player.size) newX += step;
+            
+            if (!checkCollision(newX, newY)) {
+                player.x = newX;
+                player.y = newY;
+            }
+            
+            draw();
+            checkWin();
+        });
+        
+        function moveEnemy() {
+            enemy.y += 20 * enemy.direction;
+            if (enemy.y <= 0 || enemy.y >= canvas.height - enemy.size) {
+                enemy.direction *= -1;
+            }
+            if (player.x < enemy.x + enemy.size &&
+                player.x + player.size > enemy.x &&
+                player.y < enemy.y + enemy.size &&
+                player.y + player.size > enemy.y) {
+                alert("You were caught by the enemy! Try again.");
+                player.x = 20;
+                player.y = 20;
+            }
+            draw();
+        }
+        
+        setInterval(moveEnemy, 500);
+        draw();
+    </script>
+</body>
+</html>
